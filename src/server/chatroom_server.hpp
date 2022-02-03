@@ -6,7 +6,7 @@
 #include<WS2tcpip.h>
 #include<thread>
 #include<iostream>
-
+#include"server_account.hpp"
 
 using std::cout;
 using std::endl;
@@ -116,6 +116,10 @@ class chatroom_base
 
 class chatroom_server : private chatroom_base
 {
+	private:
+		server_account account;
+		string name;
+
 	public:
 		chatroom_server(int af , int type , int protocol , int port , int backlog = 5 , unsigned int main_ver = 2 , unsigned int ver = 2):
 			chatroom_base(af , type , protocol , port , backlog , main_ver , ver)
@@ -142,7 +146,33 @@ class chatroom_server : private chatroom_base
 					cout << "you can input msg anytime" << endl;
 					cout << "---------------------------------------------------" << endl;
 
-					chat(client_socket);
+					int verify = 0;
+					if (account.login(client_socket , name , verify))
+					{
+						bool connect_state = true;
+						while (verify == 1)//passwd wrong
+						{
+							cout << "password wrong" << endl;
+							if (!account.login(client_socket , name , verify))
+							{
+								connect_state = false;
+								break;
+							}
+						}
+
+						if (connect_state)
+						{
+							if (verify == 0)
+								cout << "verify success" << endl;
+							else
+								cout << "create a new account" << endl;
+
+							cout << "-----------------------chatroom---------------------" << endl;
+							chat(client_socket);
+						}
+					}
+
+					cout << "lost connect with client" << endl;
 				}
 
 				closesocket(client_socket);
@@ -156,22 +186,22 @@ class chatroom_server : private chatroom_base
 		{
 			while (1)
 			{
-				bool send_staute = true;
-				bool recv_staute = true;
+				bool send_state = true;
+				bool recv_state = true;
 
 				bool send_tag = false;
 				bool recv_tag = false;
 
 				thread th_send(&chatroom_server::send_wrapper , this ,
-							   ref(client_socket) , ref(send_staute) , ref(send_tag));
+							   ref(client_socket) , ref(send_state) , ref(send_tag));
 				thread th_recv(&chatroom_server::recv_wrapper , this ,
-							   ref(client_socket) , ref(recv_staute) , ref(recv_tag));
+							   ref(client_socket) , ref(recv_state) , ref(recv_tag));
 
 				th_recv.detach();
 				th_send.detach();
 
 
-				if (connect_check(send_staute , recv_staute))
+				if (connect_check(send_state , recv_state))
 				{
 					th_recv.~thread();
 					th_send.~thread();
@@ -182,15 +212,13 @@ class chatroom_server : private chatroom_base
 				{
 				}
 
-				if (connect_check(send_staute , recv_staute))
+				if (connect_check(send_state , recv_state))
 				{
 					th_recv.~thread();
 					th_send.~thread();
 					break;
 				}
 			}
-
-			cout << "lost connect with client" << endl;
 		}
 
 		int send_msg(const SOCKET& client_socket , const char* msg , int flag = 0)
@@ -203,40 +231,44 @@ class chatroom_server : private chatroom_base
 			return recv(client_socket , recvBuf , len , flag);
 		}
 
-		void send_wrapper(const SOCKET& client_socket , bool& staute , bool& s_tag)
+		void send_wrapper(const SOCKET& client_socket , bool& state , bool& s_tag)
 		{
+			cout << "\nserver: ";
+
 			char input[256];	//1kbit
 			gets_s(input , 255);
 
 			int msg_len = send_msg(client_socket , input);
-			staute = (msg_len >= 0);
+			state = (msg_len >= 0);
 
 			s_tag = true;
 		}
 
-		void recv_wrapper(const SOCKET& client_socket , bool& staute , bool& r_tag)
+		void recv_wrapper(const SOCKET& client_socket , bool& state , bool& r_tag)
 		{
 			char recvBuf[256];
 			int len = recv_msg(client_socket , recvBuf , 256);
+
 			if (len > 0)
-				cout << "client: " << recvBuf << endl;
+				cout << "\n		" << name << ": " << recvBuf << endl;
 			else
-				staute = false;
+				state = false;
 
 			r_tag = true;
 		}
 
+
 		//haven't deployed
-		void heart_beat(const SOCKET& client_socket , bool& staute)
+		void heart_beat(const SOCKET& client_socket , bool& state)
 		{
 			char beat[4] = "/hb";
 
 			int beat_len = send_msg(client_socket , beat);
-			staute = (beat_len >= 0);
+			state = (beat_len >= 0);
 		}
 
-		bool connect_check(bool send_staute , bool recv_staute)
+		bool connect_check(bool send_state , bool recv_state)
 		{
-			return (!(send_staute && recv_staute) && errno != EINTR);
+			return (!(send_state && recv_state) && errno != EINTR);
 		}
 };

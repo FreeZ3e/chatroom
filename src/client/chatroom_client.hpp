@@ -5,14 +5,17 @@
 #include<WS2tcpip.h>
 #include<thread>
 #include<iostream>
-
+#include<string>
+#include"client_account.hpp"
 
 using std::cout;
 using std::endl;
 using std::thread;
 using std::ref;
+using std::string;
 
 
+//string equal
 bool aux_input_equal(const char* input , const char* tag)
 {
 	if (strlen(input) != strlen(tag))
@@ -126,6 +129,10 @@ class chatroom_base
 
 class chatroom_client : private chatroom_base
 {
+	private:
+		client_account account;
+		string name;
+
 	public:
 		chatroom_client(int af , int type , int protocol , int port , const char* ip , unsigned int main_ver = 2 , unsigned int ver = 2):
 			chatroom_base(af , type , protocol , port , ip , main_ver , ver)
@@ -133,10 +140,48 @@ class chatroom_client : private chatroom_base
 
 		void run()
 		{
+			int verify = 0;
+			if (account.login(verify , client_sock , name))
+			{
+				bool connect_state = true;
+				while (verify == 1)
+				{
+					cout << "password wrong, input again" << endl;
+
+					name.clear();//passwd wrong, clear user name
+					if (!account.login(verify , client_sock , name))
+					{
+						connect_state = false;
+						break;
+					}
+				}
+
+				if (connect_state)
+				{
+					if (verify == 0)
+						cout << "verify success" << endl;
+					else
+						cout << "create a new account" << endl;
+					
+					cout << "-----------------------chatroom---------------------" << endl;
+					chat();
+				}
+			}
+
+			shutdown(client_sock , SD_BOTH);
+			closesocket(client_sock);
+			cout << "lost connect with server" << endl;
+		}
+
+	private:
+		//chat server
+
+		void chat()
+		{
 			while (1)
 			{
-				bool send_staute = true;
-				bool recv_staute = true;
+				bool send_state = true;
+				bool recv_state = true;
 
 				bool send_tag = false;
 				bool recv_tag = false;
@@ -144,14 +189,14 @@ class chatroom_client : private chatroom_base
 				bool exit_tag = false;
 
 				thread th_recv(&chatroom_client::recv_wrapper , this ,
-							   ref(recv_staute) , ref(send_tag) , ref(exit_tag));
+							   ref(recv_state) , ref(send_tag) , ref(exit_tag));
 				thread th_send(&chatroom_client::send_wrapper , this ,
-							   ref(send_staute) , ref(recv_tag) , ref(exit_tag));
+							   ref(send_state) , ref(recv_tag) , ref(exit_tag));
 
 				th_recv.detach();
 				th_send.detach();
 
-				if (connect_check(send_staute , recv_staute))
+				if (connect_check(send_state , recv_state))
 				{
 					th_recv.~thread();
 					th_send.~thread();
@@ -169,7 +214,7 @@ class chatroom_client : private chatroom_base
 				{
 				}
 
-				if (connect_check(send_staute , recv_staute))
+				if (connect_check(send_state , recv_state))
 				{
 					th_recv.~thread();
 					th_send.~thread();
@@ -183,14 +228,7 @@ class chatroom_client : private chatroom_base
 					break;
 				}
 			}
-
-			shutdown(client_sock , SD_BOTH);
-			closesocket(client_sock);
-			cout << "lost connect with server" << endl;
 		}
-
-	private:
-		//chat server
 
 		int send_msg(const char* msg , int flag = 0)
 		{
@@ -202,8 +240,10 @@ class chatroom_client : private chatroom_base
 			return recv(client_sock , recvBuf , len , flag);
 		}
 
-		void send_wrapper(bool& staute , bool& s_tag , bool& exit)
+		void send_wrapper(bool& state , bool& s_tag , bool& exit)
 		{
+			cout << endl << name << ": ";
+
 			char msg[256];
 			gets_s(msg , 255);
 
@@ -215,19 +255,20 @@ class chatroom_client : private chatroom_base
 			}
 
 			int msg_len = send_msg(msg);
-			staute = (msg_len >= 0);
+			state = (msg_len >= 0);
 
 			s_tag = true;
 		}
 
-		void recv_wrapper(bool& staute , bool& r_tag , bool& exit)
+		void recv_wrapper(bool& state , bool& r_tag , bool& exit)
 		{
 			char recvBuf[256];	//1k
 			int len = recv_msg(recvBuf , 256);
+
 			if (len > 0)
-				cout << "server: " << recvBuf << endl;
+				cout << "\n		server: " << recvBuf << endl;
 			else
-				staute = false;
+				state = false;
 
 			if (aux_input_equal(recvBuf , "/exit"))
 				exit = true;
@@ -235,17 +276,18 @@ class chatroom_client : private chatroom_base
 			r_tag = true;
 		}
 
+
 		//haven't deployed
-		void heart_beat(bool& staute)
+		void heart_beat(bool& state)
 		{
 			char beat[4];
 
 			int beat_len = recv_msg(beat , 4);
-			staute = (beat_len > 0);
+			state = (beat_len > 0);
 		}
 
-		bool connect_check(bool send_staute , bool recv_staute)
+		bool connect_check(bool send_state , bool recv_state)
 		{
-			return (!(send_staute && recv_staute) && errno != EINTR);
+			return (!(send_state && recv_state) && errno != EINTR);
 		}
 };

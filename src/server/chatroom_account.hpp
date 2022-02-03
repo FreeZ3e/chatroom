@@ -1,0 +1,136 @@
+#pragma once
+
+#include<iostream>
+#include<fstream>
+#include<string>
+#include<vector>
+
+using std::vector;
+using std::string;
+using std::cout;
+using std::endl;
+using std::ifstream;
+using std::ofstream;
+using std::getline;
+
+class chatroom_account
+{
+	struct account
+	{
+		string user;
+		string password;
+
+		account(const string& u, const string& p):user(u),password(p)
+		{ }
+	};
+
+	public:
+		vector<account> arr;
+
+		ofstream writer;
+		ifstream reader;
+
+		string PATH = "D:/vs2019 project/Socket_ChatRoom/account.txt";
+
+	public:
+		chatroom_account()
+		{
+			load_account();
+		}
+
+		int account_server(const string& user , const string passwd)
+		{
+			int staute = verify(user , passwd);
+			if (staute == 2)
+				create_account(user , passwd);
+
+			return staute;
+		}
+	
+		bool delete_account(const string& user)
+		{
+			auto pos = arr.begin();
+			for (; pos != arr.end();)
+			{
+				if ((*pos).user == user)
+				{
+					pos = arr.erase(pos);
+					return true;
+				}
+				else
+					++pos;
+			}
+
+			return false;
+		}
+
+	private:
+		//verify successed = 0
+		//passwd wrong = 1
+		//user not exist = 2
+		int verify(const string& user, const string& passwd) const
+		{
+			for (auto p : arr)
+			{
+				if (p.user == user)
+				{
+					if (p.password == passwd)
+						return 0;
+					else
+						return 1;
+				}
+			}
+
+			return 2;
+		}
+
+		//save account each create
+		void create_account(const string& user , const string& passwd)
+		{
+			arr.push_back(account(user , passwd));
+			save_account();
+		}
+
+		void save_account()
+		{
+			writer.open(PATH);
+
+			for (auto p : arr)
+			{
+				writer << p.user << ":" << p.password << endl;
+			}
+
+			writer.flush();
+			writer.close();
+		}
+
+		void load_account()
+		{
+			reader.open(PATH);
+
+			string line;
+			string user;
+			string passwd;
+
+			while (getline(reader , line))
+			{
+				get_account(line , user , passwd);
+				if (user.empty() || passwd.empty())
+					continue;
+
+				arr.push_back(account(user , passwd));
+			}
+
+			reader.close();
+		}
+
+		void get_account(const string& line ,
+						 string& user , string& wd)
+		{
+			if (line.empty() || line.find(":") == string::npos)
+				return;
+
+			user = line.substr(0 , line.find(":"));
+			wd = line.substr(line.find(":") + 1 , line.size());
+		}
+};
