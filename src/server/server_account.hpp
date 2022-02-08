@@ -30,6 +30,16 @@ class server_account
 			return connect;
 		}
 
+		bool account_del(const string& user_name)
+		{
+			return account.delete_account(user_name);
+		}
+
+		bool reset_passwd(const string& user_name , const string& passwd)
+		{
+			return account.reset_passwd(user_name , passwd);
+		}
+
 	private:
 		bool recv_wrapper(const SOCKET& client_socket , string& str)
 		{

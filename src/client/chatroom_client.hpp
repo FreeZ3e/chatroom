@@ -7,6 +7,7 @@
 #include<iostream>
 #include<string>
 #include"client_account.hpp"
+#include"client_command.hpp"
 
 using std::cout;
 using std::endl;
@@ -130,6 +131,7 @@ class chatroom_base
 class chatroom_client : private chatroom_base
 {
 	private:
+		client_command com;
 		client_account account;
 		string name;
 
@@ -193,6 +195,7 @@ class chatroom_client : private chatroom_base
 				thread th_send(&chatroom_client::send_wrapper , this ,
 							   ref(send_state) , ref(recv_tag) , ref(exit_tag));
 
+
 				th_recv.detach();
 				th_send.detach();
 
@@ -210,7 +213,7 @@ class chatroom_client : private chatroom_base
 					break;
 				}
 
-				while (send_tag == false && recv_tag == false)
+				while ((send_tag == false && recv_tag == false))
 				{
 				}
 
@@ -227,6 +230,9 @@ class chatroom_client : private chatroom_base
 					th_send.~thread();
 					break;
 				}
+
+				th_send.~thread();
+				th_recv.~thread();
 			}
 		}
 
@@ -247,6 +253,12 @@ class chatroom_client : private chatroom_base
 			char msg[256];
 			gets_s(msg , 255);
 
+			if (com.send_command(client_sock , msg))
+			{
+				s_tag = true;
+				return;
+			}
+
 			if (aux_input_equal(msg , "/exit"))
 			{
 				exit = true;
@@ -264,6 +276,12 @@ class chatroom_client : private chatroom_base
 		{
 			char recvBuf[256];	//1k
 			int len = recv_msg(recvBuf , 256);
+
+			if (com.recv_command(recvBuf))
+			{
+				r_tag = true;
+				return;
+			}
 
 			if (len > 0)
 				cout << "\n		server: " << recvBuf << endl;

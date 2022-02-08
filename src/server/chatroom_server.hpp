@@ -7,6 +7,7 @@
 #include<thread>
 #include<iostream>
 #include"server_account.hpp"
+#include"server_command.hpp"
 
 using std::cout;
 using std::endl;
@@ -117,8 +118,10 @@ class chatroom_base
 class chatroom_server : private chatroom_base
 {
 	private:
+		server_command com;
 		server_account account;
 		string name;
+
 
 	public:
 		chatroom_server(int af , int type , int protocol , int port , int backlog = 5 , unsigned int main_ver = 2 , unsigned int ver = 2):
@@ -218,6 +221,9 @@ class chatroom_server : private chatroom_base
 					th_send.~thread();
 					break;
 				}
+
+				th_send.~thread();
+				th_recv.~thread();
 			}
 		}
 
@@ -238,6 +244,12 @@ class chatroom_server : private chatroom_base
 			char input[256];	//1kbit
 			gets_s(input , 255);
 
+			if (com.send_command(client_socket , input , account))
+			{
+				s_tag = true;
+				return;
+			}
+
 			int msg_len = send_msg(client_socket , input);
 			state = (msg_len >= 0);
 
@@ -248,6 +260,12 @@ class chatroom_server : private chatroom_base
 		{
 			char recvBuf[256];
 			int len = recv_msg(client_socket , recvBuf , 256);
+
+			if (com.recv_command(recvBuf , name , account))
+			{
+				r_tag = true;
+				return;
+			}
 
 			if (len > 0)
 				cout << "\n		" << name << ": " << recvBuf << endl;

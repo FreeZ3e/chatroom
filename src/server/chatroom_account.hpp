@@ -38,7 +38,7 @@ class chatroom_account
 			load_account();
 		}
 
-		int account_server(const string& user , const string passwd)
+		int account_server(const string& user , const string& passwd)
 		{
 			int staute = verify(user , passwd);
 			if (staute == 2)
@@ -55,10 +55,28 @@ class chatroom_account
 				if ((*pos).user == user)
 				{
 					pos = arr.erase(pos);
+
+					save_account();
 					return true;
 				}
 				else
 					++pos;
+			}
+
+			return false;
+		}
+
+		bool reset_passwd(const string& user , const string& passwd)
+		{
+			for (auto& p : arr)
+			{
+				if (p.user == user)
+				{
+					p.password = passwd;
+
+					save_account();
+					return true;
+				}
 			}
 
 			return false;
