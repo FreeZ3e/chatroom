@@ -9,9 +9,16 @@
 2. chatroom_account: 账号及其相关机制的实现.
 3. server_account/client_account: 登录机制的相互通信实现. 
 4. client/server : 对chatroom_client/chatroom_server的调用.
+5. client/server_command : 指令系统实现.
+6. client_server_file_transport : 文件传输系统实现.
 
 #### 命令:
 1. /exit : client端为退出; server端为退出当前通信, 但不关闭进程, 而是等待下一次连接.
+2. /filesd : 发送文件至对方本地.
+3. /filept : 修改文件保存路径.
+4. /passwd : 修改账号密码.
+5. /accdel : 删除账号.
+在终端使用/help可查看命令帮助
 
 #### 最近更新:
 ##### 2022/2/8
