@@ -67,6 +67,7 @@ class chatroom_base
 
 		~chatroom_base()
 		{
+			closesocket(client_sock);
 			WSACleanup();
 			cout << "client closed" << endl;
 		}
@@ -171,7 +172,6 @@ class chatroom_client : private chatroom_base
 			}
 
 			shutdown(client_sock , SD_BOTH);
-			closesocket(client_sock);
 			cout << "lost connect with server" << endl;
 		}
 
