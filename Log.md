@@ -7,3 +7,7 @@
 ### 2022/2/8
 1. 更新了指令系统, 其实现在server/client_command.hpp下, 在对应终端使用/help可查看指令.
 2. 更新了文件传输功能, 其实现在server/client_file_transport.hpp下, 使用/filesd (path)可传输文件至对方本地. 
+
+### 2022/2/15
+1. 重写架构, 支持多人通信. 该架构下server端仅负责数据的转发和账号管理服务; client端负责数据的发送与接收以及相关服务. 其实现在mult chatroom下, single chatroom下为一对一的旧聊天室架构. 
+2. 新增了针对多人通信的私聊指令 "/p".
