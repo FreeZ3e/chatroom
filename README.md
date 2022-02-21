@@ -1,7 +1,7 @@
 # Chatroom
 
 #### 介绍
-1. 该仓库为基于socket的C++多线程聊天室实现, mult chatroom为支持多人通信的聊天室架构, single chatroom仅支持一对一通信.
+1. 该仓库为基于socket的C++多线程聊天室实现, mult chatroom为支持多人通信的聊天室架构, single chatroom仅支持一对一通信. (此后更新均针对mult chatroom)
 2. 更新日志见Log.md.
 
 #### 架构:
