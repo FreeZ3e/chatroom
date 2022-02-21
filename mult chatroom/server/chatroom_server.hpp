@@ -180,6 +180,7 @@ class chatroom_server : private chatroom_base
 				}
 			}
 
+			send_notice(client_socket, name, " is disconnected");
 			logout_wrapper(name);
 		}
 
@@ -208,6 +209,8 @@ class chatroom_server : private chatroom_base
 
 					user_name.push_back(name);
 					socket_arr.push_back(client_socket);
+
+					send_notice(client_socket, name, " is online");
 					cout << "client num: " << ++client_num << endl;
 
 					return true;
@@ -266,7 +269,7 @@ class chatroom_server : private chatroom_base
 			return recv(client_socket, recvBuf, len, flag);
 		}
 
-		void send_wrapper(const SOCKET& client_socket, const string& name , char* msg_buf)
+		void send_wrapper(const SOCKET& client_socket, const string& name , const char* msg_buf)
 		{
 			string msg = name + "/NA/" + msg_buf;
 
@@ -288,5 +291,11 @@ class chatroom_server : private chatroom_base
 		bool recv_wrapper(const SOCKET& client_socket, char* msg_buf)
 		{
 			return recv_msg(client_socket, msg_buf, 1024) > 0;
+		}
+
+		void send_notice(const SOCKET& client_socket, const string& name, const string& tip)
+		{
+			string notice = name + tip;
+			send_wrapper(client_socket, "server", notice.c_str());
 		}
 };

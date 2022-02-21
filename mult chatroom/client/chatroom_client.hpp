@@ -6,6 +6,8 @@
 #include<thread>
 #include<iostream>
 #include<string>
+#include<mutex>
+#include<condition_variable>
 #include"client_account.hpp"
 #include"client_command.hpp"
 
@@ -14,6 +16,10 @@ using std::endl;
 using std::thread;
 using std::ref;
 using std::string;
+using std::mutex;
+using std::unique_lock;
+using std::condition_variable;
+
 
 class chatroom_base
 {
@@ -118,6 +124,9 @@ class chatroom_client : private chatroom_base
 		client_account account;
 		client_command com;
 
+		mutex MUTE; 
+		condition_variable cv;
+
 		string name;
 
 	public:
@@ -170,29 +179,16 @@ class chatroom_client : private chatroom_base
 				bool send_state = true;
 				bool recv_state = true;
 
-				bool send_tag = false;
-				bool recv_tag = false;
-
 				bool exit_tag = false;
 
-				thread th_recv(&chatroom_client::recv_wrapper, this,
-					ref(send_tag), ref(send_state));
-				thread th_send(&chatroom_client::send_wrapper, this,
-					ref(recv_tag), ref(recv_state), ref(exit_tag));
+				thread th_recv(&chatroom_client::recv_wrapper, this, ref(send_state));
+				thread th_send(&chatroom_client::send_wrapper, this, ref(recv_state), ref(exit_tag));
 
 				th_recv.detach();
 				th_send.detach();
 
-				if (connect_check(send_state, recv_state) || exit_tag)
-				{
-					th_recv.~thread();
-					th_send.~thread();
-					break;
-				}
-
-				while ((send_tag == false && recv_tag == false))
-				{
-				}
+				std::unique_lock<std::mutex> lock(MUTE);
+				cv.wait(lock);
 
 				if (connect_check(send_state, recv_state) || exit_tag)
 				{
@@ -203,7 +199,7 @@ class chatroom_client : private chatroom_base
 			}
 		}
 
-		void send_wrapper(bool& tag , bool& state , bool& exit_tag)
+		void send_wrapper(bool& state , bool& exit_tag)
 		{
 			cout << endl << name << ": ";
 
@@ -212,24 +208,24 @@ class chatroom_client : private chatroom_base
 
 			if (com.send_command(client_sock, msg, exit_tag))
 			{
-				tag = true;
+				cv.notify_one();
 				return;
 			}
 
 			int msg_len = send_msg(msg);
 			state = (msg_len >= 0);
 
-			tag = true;
+			cv.notify_one();
 		}
 
-		void recv_wrapper(bool& tag , bool& state)
+		void recv_wrapper(bool& state)
 		{
 			char recvBuf[1024];
 			int len = recv_msg(recvBuf , 1024);
 
 			if (com.recv_command(recvBuf, name))
 			{
-				tag = true;
+				cv.notify_one();
 				return;
 			}
 
@@ -242,7 +238,7 @@ class chatroom_client : private chatroom_base
 			else
 				state = false;
 
-			tag = true;
+			cv.notify_one();
 		}
 
 		int send_msg(const char* msg , int flag = 0)

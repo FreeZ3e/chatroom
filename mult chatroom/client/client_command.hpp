@@ -91,7 +91,7 @@ class client_command
 		{
 			cout << "---------------------------------" << endl;
 			cout << "commands:" << endl;
-			cout << "		1. /accdel (user name): delete account" << endl;
+			cout << "		1. /accdel : delete account" << endl;
 			cout << "		2. /passwd (new passwd) : reset password" << endl;
 			cout << "		3. /filesd (target user name) (file path): send file" << endl;
 			cout << "		4. /filept (path) : change save path" << endl;
