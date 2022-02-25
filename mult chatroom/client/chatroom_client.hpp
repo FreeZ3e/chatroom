@@ -161,6 +161,10 @@ class chatroom_client : private chatroom_base
 						cout << "create a new account" << endl;
 
 					cout << "-----------------------chatroom---------------------" << endl;
+
+					if (recv_history())
+						cout << "---------------------history here-------------------" << endl;
+
 					chat();
 				}
 			}
@@ -241,6 +245,29 @@ class chatroom_client : private chatroom_base
 			cv.notify_one();
 		}
 
+		bool recv_history()
+		{
+			bool history = false;
+
+			while (1)
+			{
+				char recvBuf[1024];
+				if(recv_msg(recvBuf,1024) < 0)
+					break;
+
+				string name, msg;
+				divide_name(recvBuf, name, msg);
+				if(name == "/hisend")
+					break;
+				else
+					history = true;
+
+				cout << "\n		" << name << ": " << msg << endl;
+			}
+
+			return history;
+		}
+
 		int send_msg(const char* msg , int flag = 0)
 		{
 			return send(client_sock , msg , strlen(msg) + 1 , flag);
@@ -257,7 +284,7 @@ class chatroom_client : private chatroom_base
 			return (!(send_state && recv_state) && errno != EINTR);
 		}
 
-		void divide_name(char* recvBuf , string& name , string& msg)
+		void divide_name(const char* recvBuf , string& name , string& msg)
 		{
 			string buf = recvBuf;
 

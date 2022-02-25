@@ -120,6 +120,7 @@ class chatroom_server : private chatroom_base
 	private:
 		vector<SOCKET> socket_arr;
 		vector<string> user_name;
+		vector<string> history_msg;
 
 		int client_num = 0;
 
@@ -175,13 +176,15 @@ class chatroom_server : private chatroom_base
 					{
 						cout << name << ": " << msg_buf << endl;
 
-						send_wrapper(client_socket, name, msg_buf);
+						string msg = msg_wrapper(name, msg_buf).c_str();
+						history_msg.push_back(msg);
+						send_wrapper(client_socket, msg.c_str());
 					}
 				}
-			}
 
-			send_notice(client_socket, name, " is disconnected");
-			logout_wrapper(name);
+				send_notice(client_socket, name, " is disconnected");
+				logout_wrapper(name);
+			}
 		}
 
 		bool login_wrapper(const SOCKET& client_socket, string& name)
@@ -211,6 +214,7 @@ class chatroom_server : private chatroom_base
 					socket_arr.push_back(client_socket);
 
 					send_notice(client_socket, name, " is online");
+					send_history_msg(client_socket);
 					cout << "client num: " << ++client_num << endl;
 
 					return true;
@@ -269,16 +273,19 @@ class chatroom_server : private chatroom_base
 			return recv(client_socket, recvBuf, len, flag);
 		}
 
-		void send_wrapper(const SOCKET& client_socket, const string& name , const char* msg_buf)
+		string msg_wrapper(const string& name, const string& msg)
 		{
-			string msg = name + "/NA/" + msg_buf;
+			return name + "/NA/" + msg;
+		}
 
+		void send_wrapper(const SOCKET& client_socket, const char* msg_buf)
+		{
 			for (size_t n = 0; n < socket_arr.size(); ++n)
 			{
 				if (socket_arr[n] != INVALID_SOCKET && 
 					client_socket != socket_arr[n])
 				{
-					int send_len = send_msg(socket_arr[n], msg.c_str());
+					int send_len = send_msg(socket_arr[n], msg_buf);
 					if (send_len <= 0)
 					{
 						closesocket(socket_arr[n]);
@@ -293,9 +300,23 @@ class chatroom_server : private chatroom_base
 			return recv_msg(client_socket, msg_buf, 1024) > 0;
 		}
 
+
 		void send_notice(const SOCKET& client_socket, const string& name, const string& tip)
 		{
 			string notice = name + tip;
-			send_wrapper(client_socket, "server", notice.c_str());
+			notice = msg_wrapper("server", notice);
+			send_wrapper(client_socket, notice.c_str());
+		}
+
+		void send_history_msg(const SOCKET& client_socket)
+		{
+			size_t size = history_msg.size();
+			for (size_t n = 0; n < size; n++)
+			{
+				send_msg(client_socket, history_msg[n].c_str());
+				Sleep(10);
+			}
+
+			send_msg(client_socket, "/hisend");
 		}
 };
