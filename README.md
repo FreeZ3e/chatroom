@@ -3,6 +3,7 @@
 #### 介绍
 1. 该仓库为基于socket的C++多线程聊天室实现, mult chatroom为支持多人通信的聊天室架构, single chatroom仅支持一对一通信. (此后更新均针对mult chatroom)
 2. 更新日志见Log.md.
+3. mult chatroom中的client需开启C++17标准的支持.
 
 #### 架构:
 1. chatroom_client/chatroom_server: 聊天室的实现, 其中包含chatroom_base类及子类chatroom_client/server; chatroom_base类的作用是初始化WSA和socket, 而子类负责聊天室的主要业务.
