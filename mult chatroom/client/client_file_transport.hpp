@@ -5,16 +5,23 @@
 #include<string>
 #include<fstream>
 #include<sys/stat.h>
+#include<filesystem>
+#include<iomanip>
 
 using std::string;
 using std::ifstream;
 using std::ofstream;
+using std::filesystem::file_size;
+using std::to_string;
+using std::atof;
+using std::setprecision;
+using std::setiosflags;
 
 
 class transport_base
 {
 	public:
-		bool create_socket(SOCKET& recv_socket, sockaddr_in& recv_in)
+		bool create_socket(SOCKET& recv_socket, sockaddr_in& recv_in, const char* ip)
 		{
 			recv_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (recv_socket == INVALID_SOCKET)
@@ -22,7 +29,7 @@ class transport_base
 
 			recv_in.sin_family = AF_INET;
 			recv_in.sin_port = htons(8889);
-			int ip_err = inet_pton(AF_INET, "127.0.0.1", &recv_in.sin_addr);
+			int ip_err = inet_pton(AF_INET, ip, &recv_in.sin_addr);
 
 			if (ip_err != 1)
 				return false;
@@ -38,6 +45,8 @@ class file_transport : private transport_base
 		string PATH = "D:/vs2019 project/Socket_ChatRoom";
 		string recv_path;
 
+		const char* ip_address = "";
+
 	public:
 		bool set_path(const string& path)
 		{
@@ -48,6 +57,11 @@ class file_transport : private transport_base
 			}
 
 			return false;
+		}
+
+		void set_ip(const char* ip)
+		{
+			ip_address = ip;
 		}
 
 		int send_wrapper(const SOCKET& client_socket, const string& op)
@@ -66,7 +80,7 @@ class file_transport : private transport_base
 			SOCKET send_socket = INVALID_SOCKET;
 			sockaddr_in send_in;
 
-			if (!create_socket(send_socket, send_in))
+			if (!create_socket(send_socket, send_in, ip_address))
 				return 2;
 
 			if (!send_filename(send_socket, name))
@@ -75,8 +89,15 @@ class file_transport : private transport_base
 			if (!recv_ack(send_socket))
 				return 4;
 
-			if (!send_file(send_socket, path))
+			double total_size = 0;
+			if (!send_file_size(send_socket, path, total_size))
 				return 5;
+
+			if (!recv_ack(send_socket))
+				return 6;
+
+			if (!send_file(send_socket, path, total_size))
+				return 7;
 
 			closesocket(send_socket);
 			return 0;
@@ -87,7 +108,7 @@ class file_transport : private transport_base
 			SOCKET recv_socket = INVALID_SOCKET;
 			sockaddr_in recv_in;
 
-			if (!create_socket(recv_socket, recv_in))
+			if (!create_socket(recv_socket, recv_in, ip_address))
 				return 1;
 
 			if (!recv_filename(recv_socket))
@@ -96,8 +117,15 @@ class file_transport : private transport_base
 			if (!send_ack(recv_socket))
 				return 3;
 
-			if (!recv_file(recv_socket))
+			double total_size = 0;
+			if (!recv_file_size(recv_socket, total_size))
 				return 4;
+
+			if (!send_ack(recv_socket))
+				return 5;
+
+			if (!recv_file(recv_socket, total_size))
+				return 6;
 
 			closesocket(recv_socket);
 			return 0;
@@ -131,6 +159,31 @@ class file_transport : private transport_base
 			return true;
 		}
 
+		bool send_file_size(const SOCKET& client_socket, const string& path, double& total_size)
+		{
+			total_size = file_size(path) / (double)1024;
+			string str_size = to_string(total_size);
+
+			cout << "size of file : " << str_size << " kb" << endl;
+
+			return send(client_socket, str_size.c_str(), str_size.size()+1, 0) > 0;
+		}
+
+		bool recv_file_size(const SOCKET& client_socket, double& total_size)
+		{
+			char size[1024];
+			int len = recv(client_socket, size, 1024, 0);
+			
+			if(len > 0)
+				cout << "size of file : " << size << " kb" << endl;
+			else
+				return false;
+
+			total_size = atof(size);
+
+			return true;
+		}
+
 		bool send_ack(const SOCKET& client_socket)
 		{
 			string ack = "/ack";
@@ -150,7 +203,7 @@ class file_transport : private transport_base
 			return false;
 		}
 
-		bool send_file(const SOCKET& client_socket, const string& path)
+		bool send_file(const SOCKET& client_socket, const string& path, double total_size)
 		{
 			char file_buf[1024] = { 0 };
 			ifstream file;
@@ -159,6 +212,7 @@ class file_transport : private transport_base
 			if (!file)
 				return false;
 
+			int p_size = 0;
 			while (!file.eof())
 			{
 				file.read(file_buf, 1024);
@@ -166,14 +220,17 @@ class file_transport : private transport_base
 				int len = file.gcount();
 				if (send(client_socket, file_buf, len, 0) < 0) //send file
 					return false;
-			}
+
+				p_size += len;
+				processing_show(total_size, p_size);
+			}cout<<endl;
 
 
 			file.close();
 			return true;
 		}
 
-		bool recv_file(const SOCKET& client_socket)
+		bool recv_file(const SOCKET& client_socket, double total_size)
 		{
 			char file_buf[1024] = { 0 };
 			ofstream file;
@@ -182,6 +239,7 @@ class file_transport : private transport_base
 			if (!file)
 				return false;
 
+			int p_size = 0;
 			while (1)
 			{
 				int len = recv(client_socket, file_buf, 1024, 0);
@@ -189,7 +247,10 @@ class file_transport : private transport_base
 					file.write(file_buf, len);
 				else
 					break;
-			}
+				
+				p_size += len;
+				processing_show(total_size, p_size);
+			}cout<<endl;
 
 
 			file.flush();
@@ -214,5 +275,13 @@ class file_transport : private transport_base
 				return false;
 
 			return true;
+		}
+
+		void processing_show(double total_size, int p_size)
+		{
+			p_size /= 1024;
+			cout << "\r" << "processing: " << 
+				setiosflags(std::ios::fixed) << setprecision(3) << 
+				(p_size/total_size) * 100 << "%";
 		}
 };

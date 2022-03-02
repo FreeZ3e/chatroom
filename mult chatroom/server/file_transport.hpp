@@ -74,8 +74,15 @@ class file_transport : private transport_base
 
 			if (!filename_tran(send_socket, recv_socket))
 				return 4;
+
 			if (!ack_tran(send_socket, recv_socket))
 				return 5;
+
+			if (!filesize_tran(send_socket, recv_socket))
+				return 6;
+
+			if (!ack_tran(send_socket, recv_socket))
+				return 7;
 
 			file_tran(send_socket, recv_socket);
 
@@ -92,6 +99,19 @@ class file_transport : private transport_base
 			if (len > 0)
 			{
 				if (send(recv_socket, name_buf, len, 0) > 0)
+					return true;
+			}
+
+			return false;
+		}
+
+		bool filesize_tran(const SOCKET& send_socket, const SOCKET& recv_socket)
+		{
+			char size_buf[1024] = { 0 };
+			int len = recv(send_socket, size_buf, 1024, 0);
+			if (len > 0)
+			{
+				if (send(recv_socket, size_buf, len, 0) > 0)
 					return true;
 			}
 

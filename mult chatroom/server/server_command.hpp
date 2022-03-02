@@ -27,7 +27,7 @@ class server_command
 			{
 				string msg = "user not exist";
 
-				if(account.account_del(op))
+				if(account.account_del(name))
 					msg = "account deleted";
 
 				send_wrapper(client_socket, msg);

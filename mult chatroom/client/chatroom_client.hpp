@@ -133,7 +133,9 @@ class chatroom_client : private chatroom_base
 		chatroom_client(int af , int type , int protocol , int port , 
 						const char* ip , unsigned int main_ver = 2 , unsigned int ver = 2) :
 			chatroom_base(af , type , protocol , port , ip , main_ver , ver)
-		{}
+		{
+			com.set_ip(ip);
+		}
 
 		void run()
 		{
@@ -292,3 +294,14 @@ class chatroom_client : private chatroom_base
 			msg = buf.substr(buf.find("/NA/") + 4, buf.size());
 		}
 };
+
+
+void aux_set_ip(string& ip_buf, int& port)
+{
+	cout<<"input ip address of server: ";
+	std::getline(std::cin, ip_buf);
+
+	cout<<"input the port of server: ";
+	std::cin>>port;
+	std::cin.ignore();
+}

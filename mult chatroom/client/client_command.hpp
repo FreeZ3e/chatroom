@@ -15,6 +15,11 @@ class client_command
 		file_transport file_t;
 
 	public:
+		void set_ip(const char* ip)
+		{
+			file_t.set_ip(ip);
+		}
+
 		bool send_command(const SOCKET& client_socket, const char* input, bool& exit_tag)
 		{
 			string com, op;
