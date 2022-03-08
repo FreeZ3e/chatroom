@@ -12,6 +12,7 @@
 4. client/server : 对chatroom_client/chatroom_server的调用.
 5. client/server_command : 指令系统实现.
 6. client/server_file_transport : 文件传输系统实现.
+7. thread_pool : 线程池.
 
 #### 命令:
 1. /exit : client端为退出; server端为退出当前通信, 但不关闭进程, 而是等待下一次连接.
