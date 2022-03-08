@@ -10,6 +10,7 @@
 #include<condition_variable>
 #include"client_account.hpp"
 #include"client_command.hpp"
+#include"thread_pool.hpp"
 
 using std::cout;
 using std::endl;
@@ -19,7 +20,7 @@ using std::string;
 using std::mutex;
 using std::unique_lock;
 using std::condition_variable;
-
+using std::bind;
 
 class chatroom_base
 {
@@ -126,13 +127,15 @@ class chatroom_client : private chatroom_base
 
 		mutex MUTE; 
 		condition_variable cv;
+		thread_pool<void> th_pool;
 
 		string name;
 
 	public:
 		chatroom_client(int af , int type , int protocol , int port , 
-						const char* ip , unsigned int main_ver = 2 , unsigned int ver = 2) :
-			chatroom_base(af , type , protocol , port , ip , main_ver , ver)
+						const char* ip , unsigned int main_ver = 2 , 
+						unsigned int ver = 2 , size_t pool_size = 10) :
+			chatroom_base(af , type , protocol , port , ip , main_ver , ver) , th_pool(pool_size)
 		{
 			com.set_ip(ip);
 		}
@@ -187,28 +190,24 @@ class chatroom_client : private chatroom_base
 
 				bool exit_tag = false;
 
-				thread th_recv(&chatroom_client::recv_wrapper, this, ref(send_state));
-				thread th_send(&chatroom_client::send_wrapper, this, ref(recv_state), ref(exit_tag));
+				auto send_binder(bind(&chatroom_client::send_wrapper, this, ref(send_state), ref(exit_tag)));
+				auto recv_binder(bind(&chatroom_client::recv_wrapper, this, ref(recv_state)));
 
-				th_recv.detach();
-				th_send.detach();
+				th_pool.submit_task(recv_binder);
 
-				std::unique_lock<std::mutex> lock(MUTE);
+				cout << endl << name << ": ";
+				th_pool.submit_task(send_binder);
+
+				unique_lock<mutex> lock(MUTE);
 				cv.wait(lock);
 
 				if (connect_check(send_state, recv_state) || exit_tag)
-				{
-					th_recv.~thread();
-					th_send.~thread();
 					break;
-				}
 			}
 		}
 
 		void send_wrapper(bool& state , bool& exit_tag)
 		{
-			cout << endl << name << ": ";
-
 			char msg[1024];
 			gets_s(msg , 1023);
 
@@ -243,7 +242,7 @@ class chatroom_client : private chatroom_base
 			}
 			else
 				state = false;
-
+;
 			cv.notify_one();
 		}
 

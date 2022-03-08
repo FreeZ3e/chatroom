@@ -8,6 +8,7 @@
 #include<vector>
 #include"server_account.hpp"
 #include"server_command.hpp"
+#include"thread_pool.hpp"
 
 using std::cout;
 using std::endl;
@@ -127,10 +128,12 @@ class chatroom_server : private chatroom_base
 		server_account account;
 		server_command com;
 
+		thread_pool<void> th_pool;
+
 	public:
 		chatroom_server(int af, int type, int protocol, int port,
-			int backlog = 5, unsigned int main_ver = 2, unsigned int ver = 2) :
-			chatroom_base(af, type, protocol, port, backlog, main_ver, ver)
+			int backlog = 5, unsigned int main_ver = 2, unsigned int ver = 2, size_t pool_size = 5) :
+			chatroom_base(af, type, protocol, port, backlog, main_ver, ver), th_pool(pool_size)
 		{}
 
 		void run()
@@ -141,8 +144,8 @@ class chatroom_server : private chatroom_base
 
 				if (client_socket != INVALID_SOCKET)
 				{
-					thread th_channel(&chatroom_server::client_channel, this, client_socket);
-					th_channel.detach();
+					auto th_channel(std::bind(&chatroom_server::client_channel, this, client_socket));
+					th_pool.submit_task(th_channel);
 				}
 			}
 		}
