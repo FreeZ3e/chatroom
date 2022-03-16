@@ -132,8 +132,8 @@ class chatroom_server : private chatroom_base
 
 	public:
 		chatroom_server(int af, int type, int protocol, int port,
-			int backlog = 5, unsigned int main_ver = 2, unsigned int ver = 2, size_t pool_size = 5) :
-			chatroom_base(af, type, protocol, port, backlog, main_ver, ver), th_pool(pool_size)
+			int backlog = 5, unsigned int main_ver = 2, unsigned int ver = 2) :
+			chatroom_base(af, type, protocol, port, backlog, main_ver, ver), th_pool(io_type_task)
 		{}
 
 		void run()

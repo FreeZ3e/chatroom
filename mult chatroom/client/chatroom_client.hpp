@@ -134,8 +134,8 @@ class chatroom_client : private chatroom_base
 	public:
 		chatroom_client(int af , int type , int protocol , int port , 
 						const char* ip , unsigned int main_ver = 2 , 
-						unsigned int ver = 2 , size_t pool_size = 10) :
-			chatroom_base(af , type , protocol , port , ip , main_ver , ver) , th_pool(pool_size)
+						unsigned int ver = 2) :
+			chatroom_base(af , type , protocol , port , ip , main_ver , ver) , th_pool(io_type_task)
 		{
 			com.set_ip(ip);
 		}
