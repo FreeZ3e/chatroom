@@ -24,7 +24,7 @@
 在终端使用/help可查看命令帮助, 在mult chatroom中server不支持指令.
 
 #### 最近更新:
-##### 2022/3/8
-1. 对client和server更新了线程池, 优化底层效率.
+##### 2022/3/27
+1. 重写了server和client端的history接收函数.
 
 
