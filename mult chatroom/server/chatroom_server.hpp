@@ -121,7 +121,7 @@ class chatroom_server : private chatroom_base
 	private:
 		vector<SOCKET> socket_arr;
 		vector<string> user_name;
-		vector<string> history_msg;
+		string history_msg;
 
 		int client_num = 0;
 
@@ -178,9 +178,9 @@ class chatroom_server : private chatroom_base
 									socket_arr, user_name))
 					{
 						cout << name << ": " << msg_buf << endl;
+						history_msg += name + ": " + msg_buf + "\n";
 
 						string msg = msg_wrapper(name, msg_buf).c_str();
-						history_msg.push_back(msg);
 						send_wrapper(client_socket, msg.c_str());
 					}
 				}
@@ -313,13 +313,9 @@ class chatroom_server : private chatroom_base
 
 		void send_history_msg(const SOCKET& client_socket)
 		{
-			size_t size = history_msg.size();
-			for (size_t n = 0; n < size; n++)
-			{
-				send_msg(client_socket, history_msg[n].c_str());
-				Sleep(10);
-			}
-
-			send_msg(client_socket, "/hisend");
+			if (history_msg.empty())
+				send_msg(client_socket, "/hisend");
+			else
+				send_msg(client_socket, history_msg.c_str());
 		}
 };

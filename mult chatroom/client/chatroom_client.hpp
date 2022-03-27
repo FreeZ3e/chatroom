@@ -206,10 +206,10 @@ class chatroom_client : private chatroom_base
 			}
 		}
 
-		void send_wrapper(bool& state , bool& exit_tag)
+		void send_wrapper(bool& state, bool& exit_tag)
 		{
 			char msg[1024];
-			gets_s(msg , 1023);
+			gets_s(msg, 1023);
 
 			if (com.send_command(client_sock, msg, exit_tag))
 			{
@@ -218,7 +218,7 @@ class chatroom_client : private chatroom_base
 			}
 
 			int msg_len = send_msg(msg);
-			state = (msg_len >= 0);
+			state = (msg_len > 0);
 
 			cv.notify_one();
 		}
@@ -226,7 +226,7 @@ class chatroom_client : private chatroom_base
 		void recv_wrapper(bool& state)
 		{
 			char recvBuf[1024];
-			int len = recv_msg(recvBuf , 1024);
+			int len = recv_msg(recvBuf, 1024);
 
 			if (com.recv_command(recvBuf, name))
 			{
@@ -242,31 +242,23 @@ class chatroom_client : private chatroom_base
 			}
 			else
 				state = false;
-;
+			
 			cv.notify_one();
 		}
 
 		bool recv_history()
 		{
-			bool history = false;
+			char recvBuf[1024];
+			if (recv_msg(recvBuf, 1024) < 0)
+				return false;
 
-			while (1)
-			{
-				char recvBuf[1024];
-				if(recv_msg(recvBuf,1024) < 0)
-					break;
+			string msg(recvBuf);
+			if (msg == "/hisend")
+				return false;
+			else
+				cout << msg << endl;
 
-				string name, msg;
-				divide_name(recvBuf, name, msg);
-				if(name == "/hisend")
-					break;
-				else
-					history = true;
-
-				cout << "\n		" << name << ": " << msg << endl;
-			}
-
-			return history;
+			return true;
 		}
 
 		int send_msg(const char* msg , int flag = 0)
