@@ -167,8 +167,13 @@ class chatroom_client : private chatroom_base
 
 					cout << "-----------------------chatroom---------------------" << endl;
 
-					if (recv_history())
+					if (recv_init_msg("/hisend"))
 						cout << "---------------------history here-------------------" << endl;
+
+					send_ack();
+
+					if(recv_init_msg("/urend"))
+						cout<< "---------------------online user-------------------" << endl;
 
 					chat();
 				}
@@ -246,14 +251,19 @@ class chatroom_client : private chatroom_base
 			cv.notify_one();
 		}
 
-		bool recv_history()
+		void send_ack()
+		{
+			send_msg("/ack");
+		}
+
+		bool recv_init_msg(const string& end_flag)
 		{
 			char recvBuf[1024];
 			if (recv_msg(recvBuf, 1024) < 0)
 				return false;
 
 			string msg(recvBuf);
-			if (msg == "/hisend")
+			if (msg == end_flag)
 				return false;
 			else
 				cout << msg << endl;

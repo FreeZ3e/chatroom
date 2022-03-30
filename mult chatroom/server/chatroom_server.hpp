@@ -218,6 +218,9 @@ class chatroom_server : private chatroom_base
 
 					send_notice(client_socket, name, " is online");
 					send_history_msg(client_socket);
+					recv_ack(client_socket);
+					send_online_user(client_socket);
+
 					cout << "client num: " << ++client_num << endl;
 
 					return true;
@@ -303,12 +306,34 @@ class chatroom_server : private chatroom_base
 			return recv_msg(client_socket, msg_buf, 1024) > 0;
 		}
 
+		
+		void recv_ack(const SOCKET& client_socket)
+		{
+			char msg_buf[1024];
+			recv_wrapper(client_socket, msg_buf);
+		}
 
 		void send_notice(const SOCKET& client_socket, const string& name, const string& tip)
 		{
 			string notice = name + tip;
 			notice = msg_wrapper("server", notice);
 			send_wrapper(client_socket, notice.c_str());
+		}
+
+		void send_online_user(const SOCKET& client_socket)
+		{
+			string msg;
+
+			for (size_t n = 0; n < user_name.size(); ++n)
+			{
+				string notice = user_name[n] + " is online\n";
+				msg += notice;
+			}
+
+			if (!msg.empty())
+				send_msg(client_socket, msg.c_str());
+			else
+				send_msg(client_socket, "/urend");
 		}
 
 		void send_history_msg(const SOCKET& client_socket)
