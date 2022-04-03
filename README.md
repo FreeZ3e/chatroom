@@ -28,10 +28,10 @@
 #### mult chatroom gui效果:
 
 1. ip地址输入界面
-![ip地址输入界面](pic/connect_pic.jpg)
+![ip地址输入界面](pic/connect_pic.jpg) 
 
 2. 登录界面
-![登录界面](pic/login_pic.jpg)
+![登录界面](pic/login_pic.jpg) 
 
 3. 聊天主界面
 ![聊天主界面](pic/main_pic.jpg)
