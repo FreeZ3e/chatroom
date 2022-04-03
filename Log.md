@@ -32,3 +32,6 @@
 
 ### 2022/3/30
 1. 增加了客户端登录后显示在线用户的功能.
+
+### 2022/4/3
+1. 更新了由java swing实现的mult chatroom gui版本. 该版本前端由swing实现, 后端由C++编译成dll, 通过jni混合编程完成. swing项目需要添加flatlaf依赖, 其图片和依赖包资源在mult chatroom gui下的src中.
