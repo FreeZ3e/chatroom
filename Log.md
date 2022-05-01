@@ -35,3 +35,7 @@
 
 ### 2022/4/3
 1. 更新了由java swing实现的mult chatroom gui版本. 该版本前端由swing实现, 后端由C++编译成dll, 通过jni混合编程完成. swing项目需要添加flatlaf依赖, 其图片和依赖包资源在mult chatroom gui下的src中.
+
+### 2022/5/1
+1. 修复了jstring与string间编码格式不同造成的不同版本通信乱码, 统一使用GBK格式.
+2. 修复了swing中输入框造成的空指针异常问题.
