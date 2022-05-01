@@ -15,6 +15,7 @@
 6. client/server_file_transport : 文件传输系统实现.
 7. thread_pool : 线程池.
 8. chatroom_gui.java : mult chatroom gui中swing前端的实现.
+9. string_convert : jstring与string间转换.
 
 #### 命令:
 1. /exit : client端为退出; server端为退出当前通信, 但不关闭进程, 而是等待下一次连接.
@@ -37,7 +38,8 @@
 ![聊天主界面](pic/main_pic.jpg)
 
 #### 最近更新:
-#####  2022/4/3
-1. 更新了由java swing实现的mult chatroom gui版本. 该版本前端由swing实现, 后端由C++编译成dll, 通过jni混合编程完成. swing项目需要添加flatlaf依赖, 其图片和依赖包资源在mult chatroom gui下的src中.
+#####  2022/5/1
+1. 修复了jstring与string间编码格式不同造成的不同版本通信乱码, 统一使用GBK格式.
+2. 修复了swing中输入框造成的空指针异常问题.
 
 
