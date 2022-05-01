@@ -1,5 +1,6 @@
 #include"gui_base.h"
 #include"chatroom_client.hpp"
+#include"string_convert.hpp"
 
 
 JNIEXPORT jlong JNICALL Java_gui_1base_create_1obj
@@ -22,48 +23,29 @@ JNIEXPORT jint JNICALL Java_gui_1base_login
 JNIEXPORT jboolean JNICALL Java_gui_1base_send_1msg
 (JNIEnv* env, jobject, jlong ptr, jstring msg)
 {
-	const char* c_msg = env->GetStringUTFChars(msg, 0);
-
-	return ((chatroom_client*)ptr)->send_wrapper(c_msg);
+	string c_msg = jstring_to_string(env, msg);
+	return ((chatroom_client*)ptr)->send_wrapper(c_msg.c_str());
 }
 
 JNIEXPORT jstring JNICALL Java_gui_1base_recv_1msg
 (JNIEnv* env, jobject, jlong ptr)
 {
 	string msg = ((chatroom_client*)ptr)->recv_wrapper();
-	jclass jstrObj = env->FindClass("java/lang/String");
-	jmethodID methodId = env->GetMethodID(jstrObj, "<init>", "([BLjava/lang/String;)V");
-	jbyteArray byteArray = env->NewByteArray(msg.length());
-	jstring encode = env->NewStringUTF("utf-8");
-	env->SetByteArrayRegion(byteArray, 0, msg.length(), (jbyte*)msg.c_str());
-
-	return (jstring)env->NewObject(jstrObj, methodId, byteArray, encode);
+	return string_to_jstring(env, msg);
 }
 
 JNIEXPORT jstring JNICALL Java_gui_1base_recv_1history
 (JNIEnv* env, jobject, jlong ptr)
 {
 	string history_msg = ((chatroom_client*)ptr)->recv_history();
-	jclass jstrObj = env->FindClass("java/lang/String");
-	jmethodID methodId = env->GetMethodID(jstrObj, "<init>", "([BLjava/lang/String;)V");
-	jbyteArray byteArray = env->NewByteArray(history_msg.length());
-	jstring encode = env->NewStringUTF("utf-8");
-	env->SetByteArrayRegion(byteArray, 0, history_msg.length(), (jbyte*)history_msg.c_str());
-
-	return (jstring)env->NewObject(jstrObj, methodId, byteArray, encode);
+	return string_to_jstring(env, history_msg);
 }
 
 JNIEXPORT jstring JNICALL Java_gui_1base_recv_1online_1user
 (JNIEnv* env, jobject, jlong ptr)
 {
 	string user_msg = ((chatroom_client*)ptr)->recv_online_user();
-	jclass jstrObj = env->FindClass("java/lang/String");
-	jmethodID methodId = env->GetMethodID(jstrObj, "<init>", "([BLjava/lang/String;)V");
-	jbyteArray byteArray = env->NewByteArray(user_msg.length());
-	jstring encode = env->NewStringUTF("utf-8");
-	env->SetByteArrayRegion(byteArray, 0, user_msg.length(), (jbyte*)user_msg.c_str());
-
-	return (jstring)env->NewObject(jstrObj, methodId, byteArray, encode);
+	return string_to_jstring(env, user_msg);
 }
 
 
@@ -90,8 +72,8 @@ JNIEXPORT jboolean JNICALL Java_gui_1base_file_1path_1set
 JNIEXPORT void JNICALL Java_gui_1base_send_1msg_1to
 (JNIEnv* env, jobject, jlong ptr, jstring msg)
 {
-	const char* c_msg = env->GetStringUTFChars(msg, 0);
-	((chatroom_client*)ptr)->send_wrapper(c_msg);
+	string c_msg = jstring_to_string(env, msg);
+	((chatroom_client*)ptr)->send_wrapper(c_msg.c_str());
 }
 
 

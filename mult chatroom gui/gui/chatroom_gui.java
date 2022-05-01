@@ -189,21 +189,30 @@ class gui extends gui_base
 
                     File file = file_chooser.getSelectedFile();
 
-                    String _path = file.getAbsolutePath();
-                    String path = _path.replaceAll("\\\\","/");
-                    String target_name = JOptionPane.showInputDialog(main_window,"input the user");
-
-                    while(target_name.isEmpty())
+                    if(file != null)
                     {
-                        JOptionPane.showMessageDialog(main_window,"user can't be empty","chatroom", JOptionPane.WARNING_MESSAGE);
-                        target_name = JOptionPane.showInputDialog(main_window,"input the user");
-                    }
+                        String _path = file.getAbsolutePath();
+                        String path = _path.replaceAll("\\\\","/");
+                        String target_name = JOptionPane.showInputDialog(main_window,"input the user");
 
-                    String msg = "/filesd " + target_name + " " + path;
-                    if(file_send(obj_ptr, msg))
-                        JOptionPane.showMessageDialog(main_window, "send success", "chatroom", JOptionPane.WARNING_MESSAGE);
-                    else
-                        JOptionPane.showMessageDialog(main_window, "send failed", "chatroom", JOptionPane.WARNING_MESSAGE);
+                        if(target_name != null)
+                        {
+                            while (target_name.isEmpty())
+                            {
+                                JOptionPane.showMessageDialog(main_window, "user can't be empty", "chatroom", JOptionPane.WARNING_MESSAGE);
+                                target_name = JOptionPane.showInputDialog(main_window, "input the user");
+
+                                if (target_name == null)
+                                    return;
+                            }
+
+                            String msg = "/filesd " + target_name + " " + path;
+                            if (file_send(obj_ptr, msg))
+                                JOptionPane.showMessageDialog(main_window, "send success", "chatroom", JOptionPane.WARNING_MESSAGE);
+                            else
+                                JOptionPane.showMessageDialog(main_window, "send failed", "chatroom", JOptionPane.WARNING_MESSAGE);
+                        }
+                    }
                 }
                 else if(command.equals("file_path_ack"))
                 {
@@ -213,33 +222,43 @@ class gui extends gui_base
 
                     File file = path_chooser.getSelectedFile();
 
-                    String _path = file.getAbsolutePath();
-                    String path = _path.replaceAll("\\\\","/");
+                    if(file != null)
+                    {
+                        String _path = file.getAbsolutePath();
+                        String path = _path.replaceAll("\\\\", "/");
 
-                    String msg = "/filept " + path;
-                    if(file_path_set(obj_ptr, msg))
-                        JOptionPane.showMessageDialog(main_window, "path set success", "chatroom", JOptionPane.WARNING_MESSAGE);
-                    else
-                        JOptionPane.showMessageDialog(main_window, "path set failed", "chatroom", JOptionPane.WARNING_MESSAGE);
+                        String msg = "/filept " + path;
+                        if (file_path_set(obj_ptr, msg))
+                            JOptionPane.showMessageDialog(main_window, "path set success", "chatroom", JOptionPane.WARNING_MESSAGE);
+                        else
+                            JOptionPane.showMessageDialog(main_window, "path set failed", "chatroom", JOptionPane.WARNING_MESSAGE);
+                    }
                 }
                 else if(command.equals("send_to_ack"))
                 {
                     String target_name = JOptionPane.showInputDialog(main_window,"input the user");
 
-                    while(target_name.isEmpty())
+                    if(target_name != null)
                     {
-                        JOptionPane.showMessageDialog(main_window, "user can't be empty", "chatroom", JOptionPane.WARNING_MESSAGE);
-                        target_name = JOptionPane.showInputDialog(main_window, "input the user");
+                        while (target_name.isEmpty())
+                        {
+                            JOptionPane.showMessageDialog(main_window, "user can't be empty", "chatroom", JOptionPane.WARNING_MESSAGE);
+                            target_name = JOptionPane.showInputDialog(main_window, "input the user");
+
+                            if(target_name == null)
+                                return;
+                        }
+
+
+                        String msg = "/p " + target_name + "#" + input_text.getText();
+
+                        send_msg_to(obj_ptr, msg);
+
+                        output_text.append(name + ": ");
+                        output_text.append(input_text.getText());
+                        output_text.append("\n");
+                        input_text.setText(null);
                     }
-
-                    String msg = "/p " + target_name + "#" + input_text.getText();
-
-                    send_msg_to(obj_ptr, msg);
-
-                    output_text.append(name + ": ");
-                    output_text.append(input_text.getText());
-                    output_text.append("\n");
-                    input_text.setText(null);
                 }
                 else if(command.equals("del_acc_ack"))
                 {
@@ -251,15 +270,22 @@ class gui extends gui_base
                 {
                     String new_passwd = JOptionPane.showInputDialog(main_window,"input the new passwd");
 
-                    while(new_passwd.isEmpty())
+                    if(new_passwd != null)
                     {
-                        JOptionPane.showMessageDialog(main_window, "passwd can't be empty", "chatroom", JOptionPane.WARNING_MESSAGE);
-                        new_passwd = JOptionPane.showInputDialog(main_window, "input the user");
+                        while (new_passwd.isEmpty())
+                        {
+                            JOptionPane.showMessageDialog(main_window, "passwd can't be empty", "chatroom", JOptionPane.WARNING_MESSAGE);
+                            new_passwd = JOptionPane.showInputDialog(main_window, "input the user");
+
+                            if(new_passwd == null)
+                                return;
+                        }
+
+
+                        String msg = "/passwd " + new_passwd;
+
+                        reset_passwd(obj_ptr, msg);
                     }
-
-                    String msg = "/passwd " + new_passwd;
-
-                    reset_passwd(obj_ptr, msg);
                 }
             }
         };
