@@ -3,13 +3,11 @@
 
 #include<winsock2.h>
 #include<WS2tcpip.h>
-#include<iostream>
 #include<string>
 #include"client_account.hpp"
 #include"client_command.hpp"
+#include"error_log.hpp"
 
-using std::cout;
-using std::endl;
 using std::string;
 
 
@@ -36,21 +34,13 @@ class chatroom_base
 		{
 			startup_check(main_ver , ver , af , type , protocol , port , ip);
 			if (err_tag != 0)
-				cout << "the error number: " << err_tag << endl;
-			else
-			{
-				cout << "client running" << endl;
-				cout << "chatting with server: " << ip << endl;
-				cout << "you can input msg anytime" << endl;
-				cout << "-----------------------------------------------" << endl;
-			}
+				error_log::log(err_tag);
 		}
 
 		~chatroom_base()
 		{
 			closesocket(client_sock);
 			WSACleanup();
-			cout << "client closed" << endl;
 		}
 
 	private:

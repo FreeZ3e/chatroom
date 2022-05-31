@@ -52,9 +52,9 @@ class client_command
 				{
 					int err = file_t.recv_wrapper();
 					if (err != 0)
-						out_msg = "\n		receive error: " + (err + 48);
+						out_msg = "server: receive error: " + ((size_t)err + '0');
 					else
-						out_msg = "\n		file recv";
+						out_msg = "server: file recv";
 				}
 
 				return true;

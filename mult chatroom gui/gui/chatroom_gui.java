@@ -9,6 +9,8 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 
+import static java.lang.System.exit;
+
 
 public class chatroom_gui {
     public static void main(String[] args) {
@@ -19,15 +21,9 @@ public class chatroom_gui {
 
 class gui_base
 {
-    final static protected String icon_path = "./chatroom_icon.png";
-    final static protected String login_pic_path = "./login_pic.png";
-    final static protected String lib_path = "./Socket_MultRoom_client_dll";
-
-    //C++ lib load
-    static
-    {
-        System.loadLibrary(lib_path);
-    }
+    final static protected String icon_path = "chatroom_icon.png";
+    final static protected String login_pic_path = "login_pic.png";
+    final static protected String lib_path = "Socket_MultRoom_client_dll";
 
     //C++ API
     protected native long create_obj(String ip_address, int port_num);
@@ -75,13 +71,27 @@ class gui extends gui_base
 
     public gui()
     {
-        //gui style set
+        //import jar
         FlatLightLaf.install();
         try {
             UIManager.setLookAndFeel( new FlatDarkLaf());
         } catch( Exception ex ) {
             System.err.println( "Failed to initialize LaF" );
         }
+
+        //file check
+        File lib_check = new File(lib_path + ".dll");
+        File icon_check = new File(icon_path);
+        File login_pic_check = new File(login_pic_path);
+        if(!lib_check.exists() || !login_pic_check.exists() || !icon_check.exists())
+        {
+            JOptionPane.showMessageDialog(null,"file misses, please check in folder" , "error", JOptionPane.WARNING_MESSAGE);
+            exit(-1);
+        }
+
+        //import dll
+        System.loadLibrary(lib_path);
+
 
         user_name_text = new JTextField();
         passwd_text = new JPasswordField();
@@ -146,7 +156,7 @@ class gui extends gui_base
                     else if (res == -1)
                     {
                         JOptionPane.showMessageDialog(login_window, "connect lost", "login", JOptionPane.WARNING_MESSAGE);
-                        System.exit(-1);
+                        exit(-1);
                     }
                 }
             }
@@ -170,7 +180,7 @@ class gui extends gui_base
                 else
                 {
                     JOptionPane.showMessageDialog(main_window, "connect lost", "chatroom", JOptionPane.WARNING_MESSAGE);
-                    System.exit(-1);
+                    exit(-1);
                 }
             }
         };
@@ -263,7 +273,7 @@ class gui extends gui_base
                 else if(command.equals("del_acc_ack"))
                 {
                     delete_account(obj_ptr, "/accdel");
-                    System.exit(0);
+                    exit(0);
 
                 }
                 else if(command.equals("reset_passwd_ack"))
@@ -518,7 +528,7 @@ class gui extends gui_base
                     if(msg.equals("error"))//lost connect
                     {
                         JOptionPane.showMessageDialog(login_window, "connect lost", "chatroom", JOptionPane.WARNING_MESSAGE);
-                        System.exit(-1);
+                        exit(-1);
                     }
                     else if(msg.matches("server:(.*)"))//server msg
                     {
@@ -542,8 +552,7 @@ class gui extends gui_base
                         }
                         else
                         {
-                            output_text.append("        " + msg + "\n\n");
-                            output_text.setCaretPosition(output_text.getDocument().getLength());
+                            JOptionPane.showMessageDialog(main_window, msg, "server", JOptionPane.WARNING_MESSAGE);
                         }
                     }
                     else

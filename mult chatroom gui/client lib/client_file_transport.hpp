@@ -7,10 +7,8 @@
 #include<sys/stat.h>
 #include<filesystem>
 #include<iomanip>
-#include<iostream>
 
-using std::cout;
-using std::endl;
+
 using std::string;
 using std::ifstream;
 using std::ofstream;
@@ -153,7 +151,7 @@ class file_transport : private transport_base
 
 			if (len > 0)
 			{
-				string temp(filename, len - 1);
+				string temp(filename, (size_t)len - 1);
 				recv_path = PATH + temp;
 			}
 			else
@@ -167,8 +165,6 @@ class file_transport : private transport_base
 			total_size = file_size(path) / (double)1024;
 			string str_size = to_string(total_size);
 
-			cout << "size of file : " << str_size << " kb" << endl;
-
 			return send(client_socket, str_size.c_str(), str_size.size() + 1, 0) > 0;
 		}
 
@@ -177,13 +173,10 @@ class file_transport : private transport_base
 			char size[1024];
 			int len = recv(client_socket, size, 1024, 0);
 
-			if (len > 0)
-				cout << "size of file : " << size << " kb" << endl;
-			else
+			if (len <= 0)
 				return false;
 
 			total_size = atof(size);
-
 			return true;
 		}
 
@@ -199,7 +192,7 @@ class file_transport : private transport_base
 			int len = recv(client_socket, ack_buf, 1024, 0);
 			if (len > 0)
 			{
-				string temp(ack_buf, len - 1);
+				string temp(ack_buf, (size_t)len - 1);
 				return temp == "/ack";
 			}
 
@@ -225,8 +218,7 @@ class file_transport : private transport_base
 					return false;
 
 				p_size += len;
-				processing_show(total_size, p_size);
-			}cout << endl;
+			}
 
 
 			file.close();
@@ -252,8 +244,7 @@ class file_transport : private transport_base
 					break;
 
 				p_size += len;
-				processing_show(total_size, p_size);
-			}cout << endl;
+			}
 
 
 			file.flush();
@@ -278,13 +269,5 @@ class file_transport : private transport_base
 				return false;
 
 			return true;
-		}
-
-		void processing_show(double total_size, int p_size)
-		{
-			p_size /= 1024;
-			cout << "\r" << "processing: " <<
-				setiosflags(std::ios::fixed) << setprecision(3) <<
-				(p_size / total_size) * 100 << "%";
 		}
 };
