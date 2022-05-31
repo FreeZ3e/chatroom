@@ -16,6 +16,7 @@
 7. thread_pool : 线程池.
 8. chatroom_gui.java : mult chatroom gui中swing前端的实现.
 9. string_convert : jstring与string间转换.
+10. error_log : 错误日志实现.
 
 #### 命令:
 1. /exit : client端为退出; server端为退出当前通信, 但不关闭进程, 而是等待下一次连接.
@@ -38,8 +39,8 @@
 ![聊天主界面](pic/main_pic.jpg)
 
 #### 最近更新:
-#####  2022/5/1
-1. 修复了jstring与string间编码格式不同造成的不同版本通信乱码, 统一使用GBK格式.
-2. 修复了swing中输入框造成的空指针异常问题.
+##### 2022/5/31
+1. 增加了错误日志error_log.
+2. 增加了来自服务器端的消息弹窗提示.
 
 
