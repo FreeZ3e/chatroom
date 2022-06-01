@@ -404,7 +404,7 @@ class gui extends gui_base
         //window set
 
         main_window = new JFrame("chatroom");
-        main_window.setSize(800,800);
+        main_window.setSize(700,700);
         main_window.setLocationRelativeTo(null);
         main_window.setResizable(false);
         main_window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -473,7 +473,7 @@ class gui extends gui_base
         JScrollPane input_scroll = new JScrollPane(input_text, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-        input_scroll.setBounds(10,600,500,100);
+        input_scroll.setBounds(10,530,400,100);
 
         //panel set
 
@@ -482,23 +482,23 @@ class gui extends gui_base
         panel.add(send_btn);
         panel.add(send_to_btn);
         panel.add(file_choose_btn);
-        panel.setBounds(510,600,800,300);
+        panel.setBounds(430,530,100,100);
 
         //func_panel set
 
-        JPanel func_panel = new JPanel();
+        JPanel func_panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         func_panel.add(file_path_btn);
         func_panel.add(del_acc_btn);
         func_panel.add(reset_passwd_btn);
-        func_panel.setBounds(400,300,400,400);
+        func_panel.setBounds(540,530,150,100);
 
         //user_scroll set
 
         JScrollPane user_scroll = new JScrollPane(user_text, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-        user_scroll.setBounds(450,10,150,200);
+        user_scroll.setBounds(430,10,150,400);
 
 
         //main_window set
