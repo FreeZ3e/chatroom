@@ -63,6 +63,7 @@ class gui extends gui_base
     private JTextArea input_text;
     private JTextArea output_text;
     private JTextArea user_text;
+    private JComboBox<String> user_cmb;
 
     private String name;
     private String history_msg;
@@ -166,7 +167,16 @@ class gui extends gui_base
         send_listener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                boolean connect = send_msg(obj_ptr, input_text.getText());
+                String target_name = (String) user_cmb.getSelectedItem();
+                boolean connect = true;
+
+                if(target_name.equals("all"))
+                    connect = send_msg(obj_ptr, input_text.getText());
+                else
+                {
+                    String msg = "/p " + target_name + "#" + input_text.getText();
+                    send_msg_to(obj_ptr, msg);
+                }
 
                 if(connect)
                 {
@@ -203,24 +213,27 @@ class gui extends gui_base
                     {
                         String _path = file.getAbsolutePath();
                         String path = _path.replaceAll("\\\\","/");
-                        String target_name = JOptionPane.showInputDialog(main_window,"input the user");
+                        String target_name = (String) user_cmb.getSelectedItem();
 
-                        if(target_name != null)
+                        if(!target_name.equals("all"))
                         {
-                            while (target_name.isEmpty())
-                            {
-                                JOptionPane.showMessageDialog(main_window, "user can't be empty", "chatroom", JOptionPane.WARNING_MESSAGE);
-                                target_name = JOptionPane.showInputDialog(main_window, "input the user");
-
-                                if (target_name == null)
-                                    return;
-                            }
-
                             String msg = "/filesd " + target_name + " " + path;
                             if (file_send(obj_ptr, msg))
                                 JOptionPane.showMessageDialog(main_window, "send success", "chatroom", JOptionPane.WARNING_MESSAGE);
                             else
                                 JOptionPane.showMessageDialog(main_window, "send failed", "chatroom", JOptionPane.WARNING_MESSAGE);
+                        }
+                        else
+                        {
+                            int size = user_cmb.getItemCount();
+                            for(int n=1; n<size; ++n)
+                            {
+                                String msg = "/filesd " + user_cmb.getItemAt(n) + " " + path;
+                                if (file_send(obj_ptr, msg))
+                                    JOptionPane.showMessageDialog(main_window, "send success", "chatroom", JOptionPane.WARNING_MESSAGE);
+                                else
+                                    JOptionPane.showMessageDialog(main_window, "send failed", "chatroom", JOptionPane.WARNING_MESSAGE);
+                            }
                         }
                     }
                 }
@@ -242,32 +255,6 @@ class gui extends gui_base
                             JOptionPane.showMessageDialog(main_window, "path set success", "chatroom", JOptionPane.WARNING_MESSAGE);
                         else
                             JOptionPane.showMessageDialog(main_window, "path set failed", "chatroom", JOptionPane.WARNING_MESSAGE);
-                    }
-                }
-                else if(command.equals("send_to_ack"))
-                {
-                    String target_name = JOptionPane.showInputDialog(main_window,"input the user");
-
-                    if(target_name != null)
-                    {
-                        while (target_name.isEmpty())
-                        {
-                            JOptionPane.showMessageDialog(main_window, "user can't be empty", "chatroom", JOptionPane.WARNING_MESSAGE);
-                            target_name = JOptionPane.showInputDialog(main_window, "input the user");
-
-                            if(target_name == null)
-                                return;
-                        }
-
-
-                        String msg = "/p " + target_name + "#" + input_text.getText();
-
-                        send_msg_to(obj_ptr, msg);
-
-                        output_text.append(name + ": ");
-                        output_text.append(input_text.getText());
-                        output_text.append("\n");
-                        input_text.setText(null);
                     }
                 }
                 else if(command.equals("del_acc_ack"))
@@ -444,10 +431,6 @@ class gui extends gui_base
         file_choose_btn.setActionCommand("file_choose_ack");
         file_choose_btn.addActionListener(main_listener);
 
-        JButton send_to_btn = new JButton("send to");
-        send_to_btn.setActionCommand("send_to_ack");
-        send_to_btn.addActionListener(main_listener);
-
         //in func_panel
 
         JButton file_path_btn = new JButton("save path");
@@ -480,7 +463,6 @@ class gui extends gui_base
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         panel.add(send_btn);
-        panel.add(send_to_btn);
         panel.add(file_choose_btn);
         panel.setBounds(430,530,100,100);
 
@@ -500,11 +482,22 @@ class gui extends gui_base
 
         user_scroll.setBounds(430,10,150,400);
 
+        //user select panel set
+
+        JPanel user_select_panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel user_select_label = new JLabel("select user to send");
+        user_cmb = new JComboBox<>();
+        user_cmb.addItem("all");
+
+        user_select_panel.add(user_select_label);
+        user_select_panel.add(user_cmb);
+        user_select_panel.setBounds(430, 420, 150,100);
 
         //main_window set
 
         main_window.add(output_scroll);
         main_window.add(user_scroll);
+        main_window.add(user_select_panel);
         main_window.add(input_scroll);
         main_window.add(panel);
         main_window.add(func_panel);
@@ -536,6 +529,7 @@ class gui extends gui_base
                         {
                             String res = msg.substring(msg.indexOf(": ") + 2,msg.indexOf(" is online"));
                             user_text.append(res + "\n");
+                            user_cmb.addItem(res);
                         }
                         else if(msg.matches("(.*)is disconnected"))
                         {
@@ -549,6 +543,7 @@ class gui extends gui_base
                             }
 
                             user_text.setText(sb.toString());
+                            user_cmb.removeItem(logout_name);
                         }
                         else
                         {
@@ -587,7 +582,13 @@ class gui extends gui_base
             String[] online_user_list = online_user.split(" is online\n");
 
             for(int n=0;n<online_user_list.length;++n)
-                user_text.append(online_user_list[n] + "\n");
+            {
+                if(!online_user_list[n].equals(name))
+                {
+                    user_text.append(online_user_list[n] + "\n");
+                    user_cmb.addItem(online_user_list[n]);
+                }
+            }
         }
     }
 }
