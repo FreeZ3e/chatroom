@@ -1,7 +1,7 @@
 # Chatroom
 
 #### 介绍
-1. 该仓库为基于socket的C++多线程聊天室实现, mult chatroom/mult chatroom gui为支持多人通信的聊天室架构, single chatroom仅支持一对一通信. (此后更新均针对mult chatroom)
+1. 该仓库为基于socket的C++多线程聊天室实现, mult chatroom/mult chatroom gui为支持多人通信的聊天室实现, single chatroom仅支持一对一通信. (此后更新均针对mult chatroom 及 mult chatroom gui)
 2. 更新日志见Log.md.
 3. mult chatroom中的client需开启C++17标准的支持.
 4. mult chatroom gui中的swing项目部分需要添加flatlaf依赖, 图片和依赖包资源以及dll在mult chatroom gui/src下.
