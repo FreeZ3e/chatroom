@@ -20,7 +20,7 @@ class client_command
 			file_t.set_ip(ip);
 		}
 
-		bool send_command(const SOCKET& client_socket, const char* input, bool& exit_tag)
+		bool send_command(const SOCKET& client_socket, const string& name, const char* input, bool& exit_tag)
 		{
 			string com, op;
 			get_command(input, com, op);
@@ -37,6 +37,12 @@ class client_command
 			}
 			else if (com == "/filesd")
 			{
+				if (op.substr(0, op.find_last_of(" ")) == name)
+				{
+					cout << "target name error" << '\n';
+					return true;
+				}
+
 				int err = file_t.send_wrapper(client_socket, op);
 				if (err != 0)
 					cout << "send error: " << err << endl;

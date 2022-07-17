@@ -10,7 +10,6 @@
 #include<condition_variable>
 #include"client_account.hpp"
 #include"client_command.hpp"
-#include"thread_pool.hpp"
 
 using std::cout;
 using std::endl;
@@ -20,7 +19,6 @@ using std::string;
 using std::mutex;
 using std::unique_lock;
 using std::condition_variable;
-using std::bind;
 
 class chatroom_base
 {
@@ -127,7 +125,6 @@ class chatroom_client : private chatroom_base
 
 		mutex MUTE; 
 		condition_variable cv;
-		thread_pool<void> th_pool;
 
 		string name;
 
@@ -135,7 +132,7 @@ class chatroom_client : private chatroom_base
 		chatroom_client(int af , int type , int protocol , int port , 
 						const char* ip , unsigned int main_ver = 2 , 
 						unsigned int ver = 2) :
-			chatroom_base(af , type , protocol , port , ip , main_ver , ver) , th_pool(io_type_task)
+			chatroom_base(af , type , protocol , port , ip , main_ver , ver)
 		{
 			com.set_ip(ip);
 		}
@@ -188,66 +185,66 @@ class chatroom_client : private chatroom_base
 
 		void chat()
 		{
-			while (1)
-			{
-				bool send_state = true;
-				bool recv_state = true;
+			thread send_task(&chatroom_client::send_wrapper, this);
+			thread recv_task(&chatroom_client::recv_wrapper, this);
 
-				bool exit_tag = false;
+			send_task.detach();
+			recv_task.detach();
 
-				auto send_binder(bind(&chatroom_client::send_wrapper, this, ref(send_state), ref(exit_tag)));
-				auto recv_binder(bind(&chatroom_client::recv_wrapper, this, ref(recv_state)));
-
-				th_pool.submit_task(recv_binder);
-
-				cout << endl << name << ": ";
-				th_pool.submit_task(send_binder);
-
-				unique_lock<mutex> lock(MUTE);
-				cv.wait(lock);
-
-				if (connect_check(send_state, recv_state) || exit_tag)
-					break;
-			}
+			unique_lock<mutex> lock(MUTE);
+			cv.wait(lock);
 		}
 
-		void send_wrapper(bool& state, bool& exit_tag)
+		void send_wrapper()
 		{
-			char msg[1024];
-			gets_s(msg, 1023);
+			bool exit_tag = false;
 
-			if (com.send_command(client_sock, msg, exit_tag))
+			while (1)
 			{
-				cv.notify_one();
-				return;
-			}
+				cout << endl << name << ": ";
 
-			int msg_len = send_msg(msg);
-			state = (msg_len > 0);
+				char msg[1024];
+				gets_s(msg, 1023);
+
+				if (com.send_command(client_sock, name, msg, exit_tag))
+				{
+					if (exit_tag)
+						break;
+					continue;
+				}
+
+				int msg_len = send_msg(msg);
+
+				if (msg_len <= 0)
+					break;
+			}
 
 			cv.notify_one();
 		}
 
-		void recv_wrapper(bool& state)
+		void recv_wrapper()
 		{
-			char recvBuf[1024];
-			int len = recv_msg(recvBuf, 1024);
-
-			if (com.recv_command(recvBuf, name))
+			while (1)
 			{
-				cv.notify_one();
-				return;
+				char recv_buf[1024];
+				int len = recv_msg(recv_buf, 1024);
+
+				if (len <= 0)
+					break;
+
+				if (com.recv_command(recv_buf, name))
+				{
+					cout << endl << name << ": ";
+					continue;
+				}
+
+				string user_name, msg;
+				divide_name(recv_buf, user_name, msg);
+
+				cout << "\n		" << user_name << ": " << msg << '\n';
+				cout << endl << name << ": ";
 			}
 
-			if (len > 0)
-			{
-				string name, msg;
-				divide_name(recvBuf, name, msg);
-				cout << "\n		" << name << ": " << msg << endl;
-			}
-			else
-				state = false;
-			
 			cv.notify_one();
 		}
 
